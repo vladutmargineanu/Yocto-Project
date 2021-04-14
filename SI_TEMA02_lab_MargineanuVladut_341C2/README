@@ -1,0 +1,115 @@
+Student: MARGINEANU Nicolae-Vladut
+Grupa: 341 C2
+
+		   Tema 2 - Christmas Tree
+
+
+ In rezolvarea temei, am rezolvat partea de BASIC, dupa cum urmeaza:
+
+1. Imaginea sistemului trebuie generată cu Yocto
+- am generat o imagine noua cu Yocto (nu am folosit imaginea din laboratorul 6)
+
+2. Sistemul trebuie să ruleze în QEMU, folosind kernel-ul ZImage special compilat
+- se ruleaza in QEMU cu imaginea ZImage
+
+3. Sistemul trebuie să aibă un utilizator root cu parola labsi
+- pentru aceasta cerinta, am adaugat in file-ul local.conf din build/conf, urmatoarele comenzi:
+
+# Add user root with passwd labsi
+INHERIT += "extrausers"
+EXTRA_USERS_PARAMS = "usermod -P labsi root;"
+
+4. Sistemul trebuie să își configureze automat IP-ul folosind DHCP
+- pentru aceasta cerinta, am intampinat mai multe probleme cu functionarea 
+internetului pe QEMU. Dupa rularea tuturor comenzilor pentru internet si realizarea bridge-ului,
+internetul nu functiona pe QEMU.
+
+Comenzi pentru bridge pe host:
+
+sudo brctl addbr virbr0
+sudo brctl addif virbr0 eth0
+sudo ip address flush dev eth0
+sudo dhclient virbr0
+
+Am adaugat urmatoarea comanda in file-ul local.conf din build/conf, pentru DHCP:
+# Use DHCP for ip
+# CORE_IMAGE_EXTRA_INSTALL += "dhcp-server dhcp-client"
+ETH0_MODE = "dhcp"
+
+Dupa care am adaugat si comanda pentru avahi-autoipd, in rezolvarea functionarii internetului
+pe QEMU:
+
+IMAGE_INSTALL_append = " avahi-autoipd"
+
+In urma instalarii acestui pachet avahi-autoipd [1] care functioneaza ca un plugin pentru DHCP client atunci
+cand nu se gaseste niciun DHCP server.
+
+5. Sistemul trebuie să ruleze SSH pe portul 22
+- pentru instalarea OpenSSH si server-ul SSH, am adaugat urmatoarea comanda in file-ul
+local.conf din build/conf:
+
+# Install ssh packages
+EXTRA_IMAGE_FEATURES += "ssh-server-openssh"
+
+- pentru testare, am verificat portul cu comanda (portul 22 pentru ssh este by default):
+
+root@tema2:~# grep Port /etc/ssh/sshd_config
+#Port 22
+#GatewayPorts no 
+
+A functionat conectarea prin ssh de pe host, pe guest:
+
+osboxes@osboxes:~$ ssh root@tema2.local
+The authenticity of host 'tema2.local (10.0.2.16)' can't be established.
+ECDSA key fingerprint is 69:86:55:68:80:53:b5:c9:80:88:19:17:6d:d6:95:db.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added 'tema2.local' (ECDSA) to the list of known hosts.
+Warning: the ECDSA host key for 'tema2.local' differs from the key for the IP address '10.0.2.16'
+Offending key for IP in /home/osboxes/.ssh/known_hosts:1
+Are you sure you want to continue connecting (yes/no)? yes
+root@tema2.local's password: 
+Last login: Sun Jan 10 16:00:56 2021
+root@tema2:~# 
+
+6. Sistemul trebuie să ruleze daemon-ul Avahi/mDNS și să răspundă la numele tema2.local
+- pentru schimbarea numelui guest-ului, am adaugat comanda in file-ul local.conf
+din build/conf:
+
+# System respond at that name:tema2.local
+hostname_pn-base-files = "tema2.local"
+
+- pentru instalarea daemon-ului avahi, am adaugat urmatoarea comanda in file-ul local.conf
+din build/conf:
+
+IMAGE_INSTALL_append = " avahi-daemon"
+
+Pentru testarea functionarii daemon-ului avahi, am dat urmatoarea comanda pe host:
+osboxes@osboxes:~$ ping tema2.local
+PING tema2.local (10.0.2.16) 56(84) bytes of data.
+64 bytes from 10.0.2.16: icmp_seq=1 ttl=64 time=13.2 ms
+64 bytes from 10.0.2.16: icmp_seq=2 ttl=64 time=2.10 ms
+64 bytes from 10.0.2.16: icmp_seq=3 ttl=64 time=1.36 ms
+^C
+--- tema2.local ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2005ms
+rtt min/avg/max/mdev = 1.368/5.585/13.286/5.453 ms
+
+ Scriptul internet.sh este folosit pentru crearea de bridge pe host (configurarea de internet).
+
+Bibliografie:
+
+[1] avahi-autoipd(8) - Linux man page
+    [https://linux.die.net/man/8/avahi-autoipd]
+
+[2] [https://unix.stackexchange.com/questions/148956/how-do-i-
+     work-out-which-port-to-log-in-on-with-ssh]
+
+[3] [https://www.yoctoproject.org/docs/1.7/ref-manual/ref-manual.
+     html#var-EXTRA_IMAGE_FEATURES]
+
+
+
+
+
+
+

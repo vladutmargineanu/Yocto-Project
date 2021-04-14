@@ -1,0 +1,12 @@
+ Student: MARGINEANU Nicolae-Vladut
+ Grupa: 341 C2
+ Anul: 2021
+
+	 Tema 02 - SI Christmas Tree
+		Metainformatii
+
+ 1. Link către arhiva .zip cu rezolvarea propriu-zisă:
+  https://drive.google.com/drive/folders/17D3Mt1o3rfm0hqMcV1zCicr_Zr0rT2w5?usp=sharing
+
+ 2. Hash-ul md5 al arhivei (obținut cu md5sum):
+  70bf1fc582fa7a81aa8fbd0895aa5f2b  SI_TEMA02_lab_MargineanuVladut_341C2.zip
